@@ -6,10 +6,10 @@ on:
       solution_name:
         description: 'Unique name of the solution to deploy'
         required: true
-        default: 'ParentChildSolution'
+        default: 'ParentChildFlowSolution'
 
 env:
-  SOLUTION_NAME: ${{ github.event.inputs.solution_name || 'ParentChildSolution' }}
+  SOLUTION_NAME: ${{ github.event.inputs.solution_name || 'ParentChildFlowSolution' }}
 
 jobs:
   deploy-dev-to-test:
@@ -23,8 +23,9 @@ jobs:
         uses: microsoft/powerplatform-actions/export-solution@v1
         with:
           environment-url: ${{ vars.DEV_ENVIRONMENT_URL }}
-          user-name: ${{ secrets.DEV_USERNAME }}
-          password-secret: ${{ secrets.DEV_PASSWORD }}
+          app-id: ${{ vars.CLIENT_ID }}
+          client-secret: ${{ secrets.CLIENT_SECRET }}
+          tenant-id: ${{ vars.TENANT_ID }}
           solution-name: ${{ env.SOLUTION_NAME }}
           solution-output-file: 'out/exported/${{ env.SOLUTION_NAME }}.zip'
 
@@ -47,8 +48,9 @@ jobs:
         uses: microsoft/powerplatform-actions/import-solution@v1
         with:
           environment-url: ${{ vars.TEST_ENVIRONMENT_URL }}
-          user-name: ${{ secrets.TEST_USERNAME }}
-          password-secret: ${{ secrets.TEST_PASSWORD }}
+          app-id: ${{ vars.CLIENT_ID }}
+          client-secret: ${{ secrets.CLIENT_SECRET }}
+          tenant-id: ${{ vars.TENANT_ID }}
           solution-file: 'out/deploy/${{ env.SOLUTION_NAME }}_managed.zip'
           publish-changes: true
 
