@@ -1,0 +1,59 @@
+name: Deploy Power Apps Solution - Dev to Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      solution_name:
+        description: 'Unique name of the solution to deploy'
+        required: true
+        default: 'ParentChildSolution'
+
+env:
+  SOLUTION_NAME: ${{ github.event.inputs.solution_name || 'ParentChildSolution' }}
+
+jobs:
+  deploy-dev-to-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Export solution from Dev (unmanaged)
+        uses: microsoft/powerplatform-actions/export-solution@v1
+        with:
+          environment-url: ${{ vars.DEV_ENVIRONMENT_URL }}
+          user-name: ${{ secrets.DEV_USERNAME }}
+          password-secret: ${{ secrets.DEV_PASSWORD }}
+          solution-name: ${{ env.SOLUTION_NAME }}
+          solution-output-file: 'out/exported/${{ env.SOLUTION_NAME }}.zip'
+
+      - name: Unpack solution
+        uses: microsoft/powerplatform-actions/unpack-solution@v1
+        with:
+          solution-file: 'out/exported/${{ env.SOLUTION_NAME }}.zip'
+          solution-folder: 'out/solutions/${{ env.SOLUTION_NAME }}'
+          solution-type: 'Unmanaged'
+          overwrite-files: true
+
+      - name: Pack solution as Managed
+        uses: microsoft/powerplatform-actions/pack-solution@v1
+        with:
+          solution-folder: 'out/solutions/${{ env.SOLUTION_NAME }}'
+          solution-file: 'out/deploy/${{ env.SOLUTION_NAME }}_managed.zip'
+          solution-type: 'Managed'
+
+      - name: Import solution into Test
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ vars.TEST_ENVIRONMENT_URL }}
+          user-name: ${{ secrets.TEST_USERNAME }}
+          password-secret: ${{ secrets.TEST_PASSWORD }}
+          solution-file: 'out/deploy/${{ env.SOLUTION_NAME }}_managed.zip'
+          publish-changes: true
+
+      - name: Upload managed solution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOLUTION_NAME }}-managed
+          path: out/deploy/${{ env.SOLUTION_NAME }}_managed.zip
