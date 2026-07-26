@@ -19,7 +19,7 @@ jobs:
       - name: Install Power Platform Tools
         uses: microsoft/powerplatform-actions/actions-install@v1
 
-      - name: Export solution from Dev (unmanaged)
+      - name: Export solution from Dev (managed)
         uses: microsoft/powerplatform-actions/export-solution@v1
         with:
           environment-url: ${{ vars.DEV_ENVIRONMENT_URL }}
@@ -27,22 +27,8 @@ jobs:
           client-secret: ${{ secrets.CLIENT_SECRET }}
           tenant-id: ${{ vars.TENANT_ID }}
           solution-name: ${{ env.SOLUTION_NAME }}
-          solution-output-file: 'out/exported/${{ env.SOLUTION_NAME }}.zip'
-
-      - name: Unpack solution
-        uses: microsoft/powerplatform-actions/unpack-solution@v1
-        with:
-          solution-file: 'out/exported/${{ env.SOLUTION_NAME }}.zip'
-          solution-folder: 'out/solutions/${{ env.SOLUTION_NAME }}'
-          solution-type: 'Unmanaged'
-          overwrite-files: true
-
-      - name: Pack solution as Managed
-        uses: microsoft/powerplatform-actions/pack-solution@v1
-        with:
-          solution-folder: 'out/solutions/${{ env.SOLUTION_NAME }}'
-          solution-file: 'out/deploy/${{ env.SOLUTION_NAME }}_managed.zip'
-          solution-type: 'Managed'
+          managed: true
+          solution-output-file: 'out/deploy/${{ env.SOLUTION_NAME }}_managed.zip'
 
       - name: Import solution into Test
         uses: microsoft/powerplatform-actions/import-solution@v1
